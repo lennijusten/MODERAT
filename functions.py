@@ -14,7 +14,7 @@ def get_date_range(df, include_end=True):
                            freq='MS')[0:-1]
 
 def group_by_month(df):
-    g = df.groupby(pd.Grouper(key=, freq='M'))
+    g = df.groupby(pd.Grouper(key='date', freq='M'))
 
     # groups to a list of dataframes with list comprehension
     return [group for _, group in g]
@@ -105,3 +105,18 @@ def random_undersampling(df, size, seed=42):
     ind = np.sort(ind)
 
     return df.loc[ind]
+
+
+def chunk_by_number(df, n_chunks, method='sequential'):
+    # df is a dateframe sorted by date, n_chunks is the number of chunks to split the dataframe into
+    # Returns list of dataframes
+
+    if method == 'random':
+        df = df.sample(frac=1)
+    elif method == 'sequential':
+        pass
+    else:
+        print("Unknown 'method' keyword. (sequential, random)")
+        return
+
+    return np.array_split(df, n_chunks)
