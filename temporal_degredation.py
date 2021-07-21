@@ -9,8 +9,7 @@ import autosklearn
 from autosklearn.classification import AutoSklearnClassifier
 from functions import *
 
-# df = pd.read_csv('comments.csv')
-df = pd.read_pickle('/Users/lenni/Downloads/RP_comments_preprocessed.pkl')
+df = pd.read_csv('comments.csv')
 
 # Transform text by removing special characters, removing numbers, converting to lowercase, and Lemmatization
 txtpre = TextPreprocessingTransformer()
