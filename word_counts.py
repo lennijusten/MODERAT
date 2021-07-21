@@ -1,9 +1,13 @@
+# Description: Return words that emerge for the first time in the evaluation time period of the control-stratified test.
+# Author: L. Justen
+# Date: July 21, 2021
+
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 import pickle
 from functions import *
 
-# Load data with already text (pre-processed text recommended)
+# Load data with text (pre-processed text recommended)
 control_path = 'Data/df_control_s1-lazy.pkl'
 strat_path = 'Data/df_strat-lazy.pkl'
 eval_path = 'Data/df_eval.pkl'
@@ -18,6 +22,7 @@ with open(strat_path, 'rb') as handle:
     df_strat = pickle.load(handle)
 
 
+# Return single words (ngram_range=(1,1)) that occur at least three times (min_df=3) in the dataset
 vectorizer = CountVectorizer(ngram_range=(1, 1), min_df=3)
 
 
