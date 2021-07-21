@@ -22,6 +22,7 @@ with open(strat_path, 'rb') as handle:
     df_strat = pickle.load(handle)
 
 
+# Return single words (ngram_range=(1,1)) that occur at least three times (min_df=3) in the dataset
 vectorizer = CountVectorizer(ngram_range=(1, 1), min_df=3)
 
 
