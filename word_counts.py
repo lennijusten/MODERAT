@@ -7,7 +7,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 import pickle
 from functions import *
 
-# Load data with already text (pre-processed text recommended)
+# Load data with text (pre-processed text recommended)
 control_path = 'Data/df_control_s1-lazy.pkl'
 strat_path = 'Data/df_strat-lazy.pkl'
 eval_path = 'Data/df_eval.pkl'
