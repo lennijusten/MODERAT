@@ -1,3 +1,7 @@
+# Description: Return words that emerge for the first time in the evaluation time period of the control-stratified test.
+# Author: L. Justen
+# Date: July 21, 2021
+
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 import pickle
