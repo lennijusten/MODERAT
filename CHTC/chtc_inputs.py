@@ -11,7 +11,7 @@ config = {
     'eval_path': '/home/ljusten/Moderat/Auto-sklearn/Control-Strat/Data/df_eval_s1-lazy.pkl',
     'control_path': '/home/ljusten/Moderat/Auto-sklearn/Control-Strat/Data/df_control_s1-lazy.pkl',
     'strat_path': '/home/ljusten/Moderat/Auto-sklearn/Control-Strat/Data/df_strat-lazy.pkl',
-    'tfifd_max_features': 5000,
+    'tfidf_max_features': 5000,
     'tfidf_ngram_range': (1, 2),
     'tfidf_min_df': 5,
     'auto-sklearn_time': 300,
