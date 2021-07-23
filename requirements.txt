@@ -5,3 +5,4 @@ scikit-learn
 nltk
 auto-sklearn
 tqdm
+seaborn
