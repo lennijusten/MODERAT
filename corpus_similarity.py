@@ -8,10 +8,10 @@
 # Chapman & Hall: New York. 2000. Section 14.7
 # Kilgarriff, Adam. (2001). Comparing Corpora. International Journal of Corpus Linguistics. 6. 10.1075/ijcl.6.1.05kil.
 
-import pandas
+import pandas as pd
 import numpy as np
 import pickle
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from scipy.stats import spearmanr
 
 # Load data with already text (pre-processed text recommended)
@@ -34,11 +34,14 @@ with open(strat_path, 'rb') as handle:
 
 # Get indexed vocabulary for the entire corpus (words occuring at least three times)
 vectorizer1 = CountVectorizer(ngram_range=(1, 1), min_df=3)
+# vectorizer1 = TfidfVectorizer(ngram_range=(1, 1), min_df=3)
+
 corpus = vectorizer1.fit_transform(df['text2'])
 corpus_vocab = vectorizer1.get_feature_names()
 
 # Vectorizer for subsets but with complete mapping for corpus vocab
 vectorizer2 = CountVectorizer(ngram_range=(1,1),min_df=3,vocabulary=corpus_vocab)
+# vectorizer2 = TfidfVectorizer(ngram_range=(1,1),min_df=3,vocabulary=corpus_vocab)
 
 def get_features(comments):
     X = vectorizer2.fit_transform(comments)
