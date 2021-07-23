@@ -2,6 +2,7 @@ import os
 import json
 import shutil
 
+# Set run configuration
 config = {
     'test_name': 'auto-sklearn-json-test',
     'script_name': 'chtc_auto_sklearn.py',
@@ -26,13 +27,16 @@ if os.path.exists(dirpath) and os.path.isdir(dirpath):
 
 os.mkdir(config['test_name'])
 
+# Write configuration JSON
 fname = "config-{}.json".format(config['test_name'])
 with open(os.path.join(config['test_name'],fname), "w") as write_file:
     json.dump(config, write_file)
 
+# Write jobs files for multiple runs
 with open(os.path.join(config['test_name'],"jobs.txt"), "w") as text_file:
     text_file.write(fname)
 
+# Write shell script
 with open(os.path.join(config['test_name'],"{}.sh".format(config['test_name'])), 'w') as text_file:
     text_file.write('# !/bin/bash\n')
     text_file.write('set -e\n')
@@ -41,6 +45,8 @@ with open(os.path.join(config['test_name'],"{}.sh".format(config['test_name'])),
     text_file.write('pwd\n')
     text_file.write('python3 {} $1'.format(config['script_name']))
 
+
+# Write submit file
 with open(os.path.join(config['test_name'],"{}.sub".format(config['test_name'])), 'w') as text_file:
     text_file.write('executable = {}.sh\n'.format(config['test_name']))
     text_file.write('arguments = {}\n'.format(fname))
