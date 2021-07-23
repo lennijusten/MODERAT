@@ -134,7 +134,6 @@ y_test = df_eval_s1['Rejected'].values
 
 pwd = os.getcwd()
 nltk.data.path.append(os.path.join(pwd,'nltk_data'))
-nltk.download("stopwords")
 german_stop_words = stopwords.words('german')
 
 # Autosklearn can't optimize n_features and ngram_range this way
