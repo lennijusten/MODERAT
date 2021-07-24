@@ -14,6 +14,7 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from scipy.stats import spearmanr
 import matplotlib.pyplot as plt
 import seaborn as sns
+from functions import *
 
 chunks_path = '/Data/chunks.pkl'
 data_path = '/Data/RP_comments_preprocessed.pkl'
@@ -87,3 +88,45 @@ with sns.axes_style("white"):
     ax.invert_yaxis()
 
 df_rho.to_csv('Spearman_rho-CountVect-chunks.csv')
+
+# # Use months for chunks
+# months = group_by_month(df)
+#
+# col_names = [get_date_range(m, include_end=False)[0].strftime('%b-%Y')  for m in months]
+# df_rho = pd.DataFrame(columns=[col_names], index=[col_names])
+# df_p = pd.DataFrame(columns=[col_names], index=[col_names])
+#
+# for i1 in range(len(months)):  # Corpus 1 loop
+#     col = col_names[i1]
+#
+#     print('Corpus 1 = {}'.format(col))
+#     corpus1 = months[i1]['text2'].values
+#
+#     p_val = []
+#     rho = []
+#     rho.extend([np.nan] * i1)
+#     p_val.extend([np.nan] * i1)
+#
+#     print('Looping other chunks')
+#     for i2 in range(i1, len(months)):  # Corpus 2 loop
+#         corpus2 = months[i2]['text2'].values
+#
+#         rho.append(calculate_spear(corpus1, corpus2)[0])
+#         p_val.append(calculate_spear(corpus1, corpus2)[1])
+#
+#     print(rho)
+#     df_rho[col] = rho
+#     df_p[col] = p_val
+#
+#
+# mask = np.zeros_like(df_rho)
+# mask[np.triu_indices_from(mask)] = True
+# with sns.axes_style("white"):
+#     f, ax = plt.subplots(figsize=(7, 5))
+#     ax.set_title('Spearman correlation between months')
+#     ax = sns.heatmap(df_rho, cmap="magma_r",mask=mask,square=True)
+#     ax.set_ylabel('')
+#     ax.set_xlabel('')
+#     ax.invert_yaxis()
+#
+# df_rho.to_csv('Spearman_rho-CountVect-chunks.csv')
