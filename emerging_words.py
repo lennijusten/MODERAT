@@ -64,6 +64,16 @@ new_words = get_new_words(df_strat,df_eval, rejected=False)
 new_words.to_csv('words_in_A_not_in_B.csv')
 
 
+# Get new words for each month
+eval_months = group_by_month(df_eval)
+for m in eval_months:
+    name = get_date_range(m, include_end=False)[0].strftime('%b-%Y')
+    words = get_new_words(m,df_strat, rejected=False)
+    words.to_csv('emerging_terms_{}.csv'.format(name))
+
+
+
+
 
 
 
