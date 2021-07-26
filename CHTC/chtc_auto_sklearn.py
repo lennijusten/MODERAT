@@ -13,6 +13,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, matthews_co
 import argparse
 import json
 import sys
+import shutil
 
 def read_args():
     parser = argparse.ArgumentParser(description='control-strat')
@@ -34,10 +35,10 @@ strat_path = config['strat_path']
 
 print("Loading data...")
 with open(os.path.basename(eval_path), 'rb') as handle:
-    df_eval_s1 = pickle.load(handle)
+    df_eval = pickle.load(handle)
 
 with open(os.path.basename(control_path), 'rb') as handle:
-    df_control_s1 = pickle.load(handle)
+    df_control = pickle.load(handle)
 
 with open(os.path.basename(strat_path), 'rb') as handle:
     df_strat = pickle.load(handle)
@@ -66,19 +67,100 @@ def group_by_month(df):
     # groups to a list of dataframes with list comprehension
     return [group for _, group in g]
 
+
+def monthly_RCR_plot2(df_strat, df_control, df_eval, title):
+    # months axis (m_first, m_second, m_eval) are assumed to be global and unchanging
+
+    comment_eval = [m['Comment'].sum() for m in group_by_month(df_eval)]
+    rejected_eval = [m['Rejected'].sum() for m in group_by_month(df_eval)]
+
+    accepted_eval = np.array(comment_eval) - np.array(rejected_eval)
+    RCR_eval = np.array(rejected_eval) / np.array(comment_eval)
+
+    comment_1 = [m['Comment'].sum() for m in group_by_month(df_strat)]
+    rejected_1 = [m['Rejected'].sum() for m in group_by_month(df_strat)]
+    RCR_1 = np.array(rejected_1) / np.array(comment_1)
+
+    comment_2 = [m['Comment'].sum() for m in group_by_month(df_control)]
+    rejected_2 = [m['Rejected'].sum() for m in group_by_month(df_control)]
+    RCR_2 = np.array(rejected_2) / np.array(comment_2)
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.set_title(title)
+    ax.plot(m_eval[:-1], RCR_eval, 'o', c='C0', label='RCR_eval')
+    ax.hlines(np.mean(RCR_eval), m_eval[0], m_eval[-1], colors='C0', label='mean(eval)')
+    ax.set_xlabel('Month')
+    ax.set_ylabel('RCR')
+
+    ax.plot(m_control[:-1], RCR_2, 'o', c='C1', label='RCR_control')
+    ax.hlines(np.mean(RCR_2), m_control[0], m_control[-1], colors='C1', label='mean(control)')
+
+    ax.plot(m_strat[:-1], RCR_1, 'o', c='C2', label='RCR_strat')
+    ax.hlines(np.mean(RCR_1), m_strat[0], m_strat[-1], colors='C2', label='mean(strat)')
+
+    for label in ax.get_xticklabels():
+        label.set_rotation(45)
+        label.set_ha('right')
+
+    ax.legend()
+    plt.savefig('monthly_RCR_plot.png')
+
+
+def bar_plots2(df_strat, df_control, df_eval):
+    labels1 = ['Stratified', 'Control']
+    total_comments = [df_strat['Comment'].sum(), df_control['Comment'].sum()]
+    rejected_comments = [df_strat['Rejected'].sum(), df_control['Rejected'].sum()]
+    accepted_comments = np.array(total_comments) - np.array(rejected_comments)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+    width = 0.35  # the width of the bars: can also be len(x) sequence
+
+    ax1.bar(labels1, accepted_comments, width, label='Accepted')
+    ax1.bar(labels1, rejected_comments, width, bottom=accepted_comments,
+            label='Rejected')
+
+    ax1.set_ylabel('Number of comments')
+    ax1.set_title('Comments by training datasets')
+    ax1.legend()
+
+    comment_eval = [m['Comment'].sum() for m in group_by_month(df_eval)]
+    rejected_eval = [m['Rejected'].sum() for m in group_by_month(df_eval)]
+
+    accepted_eval = np.array(comment_eval) - np.array(rejected_eval)
+    RCR_eval = np.array(rejected_eval) / np.array(comment_eval)
+
+    width = 20
+    labels2 = m_eval[:-1]
+    ax2.bar(labels2, accepted_eval, width, label='Accepted')
+    ax2.bar(labels2, rejected_eval, width, bottom=accepted_eval,
+            label='Rejected')
+
+    ax2.set_ylabel('Number of comments')
+    ax2.set_title('Comments by monthly test sets')
+    ax2.legend()
+
+    for label in ax2.get_xticklabels():
+        label.set_rotation(45)
+        label.set_ha('right')
+
+    plt.savefig('monthly_bar_plot.png')
+
 # PRE-TRAINING STATISTICS
 # --------------------------------------------------------------------------------------
 # p_control = len(df_control_s1[df_control_s1.index.isin(df_eval.index)]) / len(df_control_s1) * 100
-m_control = get_date_range(df_control_s1)
+m_control = get_date_range(df_control)
 m_strat = get_date_range(df_strat)
-m_eval = get_date_range(df_eval_s1)
+m_eval = get_date_range(df_eval)
+
+monthly_RCR_plot2(df_strat, df_control, df_eval, 'Monthly RCR across datasets')
+bar_plots2(df_strat, df_control, df_eval)
 
 print('Writing dataset statistics...')
 with open("dataset_stats.txt", "w") as text_file:
     text_file.write("control dataset: {}\n".format(control_path))
-    text_file.write("length of control dataset: {}\n".format(len(df_control_s1)))
-    text_file.write("n rejected in control dataset: {}\n".format(np.sum(df_control_s1['Rejected'])))
-    text_file.write("RCR control dataset: {}\n\n".format(RCR(df_control_s1)))
+    text_file.write("length of control dataset: {}\n".format(len(df_control)))
+    text_file.write("n rejected in control dataset: {}\n".format(np.sum(df_control['Rejected'])))
+    text_file.write("RCR control dataset: {}\n\n".format(RCR(df_control)))
 
     text_file.write("stratified dataset: {}\n".format(strat_path))
     text_file.write("length of stratified dataset: {}\n".format(len(df_strat)))
@@ -86,9 +168,9 @@ with open("dataset_stats.txt", "w") as text_file:
     text_file.write("RCR stratified dataset: {}\n\n".format(RCR(df_strat)))
 
     text_file.write("eval dataset: {}\n".format(control_path))
-    text_file.write("length of eval dataset: {}\n".format(len(df_eval_s1)))
-    text_file.write("n rejected in eval dataset: {}\n".format(np.sum(df_eval_s1['Rejected'])))
-    text_file.write("RCR eval dataset: {}\n\n".format(RCR(df_eval_s1)))
+    text_file.write("length of eval dataset: {}\n".format(len(df_eval)))
+    text_file.write("n rejected in eval dataset: {}\n".format(np.sum(df_eval['Rejected'])))
+    text_file.write("RCR eval dataset: {}\n\n".format(RCR(df_eval)))
 
     # text_file.write("Proportion of control dataset in evaluation period: {}\n".format(p_control))
     text_file.write("control dataset daterange: {}\n".format(m_control))
@@ -96,32 +178,32 @@ with open("dataset_stats.txt", "w") as text_file:
     text_file.write("eval dataset daterange: {}\n".format(m_eval))
 
 
-RCR_control_bymonth = [RCR(month) for month in group_by_month(df_control_s1)]
-n_control_bymonth = [len(month) for month in group_by_month(df_control_s1)]
-n_control_rejected_bymonth = [np.sum(month['Rejected']) for month in group_by_month(df_control_s1)]
+RCR_control_bymonth = [RCR(month) for month in group_by_month(df_control)]
+n_control_bymonth = [len(month) for month in group_by_month(df_control)]
+n_control_rejected_bymonth = [np.sum(month['Rejected']) for month in group_by_month(df_control)]
 
 RCR_strat_bymonth = [RCR(month) for month in group_by_month(df_strat)]
 n_strat_bymonth = [len(month) for month in group_by_month(df_strat)]
 n_strat_rejected_bymonth = [np.sum(month['Rejected']) for month in group_by_month(df_strat)]
 
-RCR_eval_bymonth = [RCR(month) for month in group_by_month(df_eval_s1)]
-n_eval_bymonth = [len(month) for month in group_by_month(df_eval_s1)]
-n_eval_rejected_bymonth = [np.sum(month['Rejected']) for month in group_by_month(df_eval_s1)]
+RCR_eval_bymonth = [RCR(month) for month in group_by_month(df_eval)]
+n_eval_bymonth = [len(month) for month in group_by_month(df_eval)]
+n_eval_rejected_bymonth = [np.sum(month['Rejected']) for month in group_by_month(df_eval)]
 
 control_bymonth = pd.DataFrame({'comment':n_control_bymonth,'rejected':n_control_rejected_bymonth,'RCR':RCR_control_bymonth},index=m_control[:-1])
 strat_bymonth = pd.DataFrame({'comment':n_strat_bymonth,'rejected':n_strat_rejected_bymonth,'RCR':RCR_strat_bymonth},index=m_strat[:-1])
 eval_bymonth = pd.DataFrame({'comment':n_eval_bymonth,'rejected':n_eval_rejected_bymonth,'RCR':RCR_eval_bymonth},index=m_eval[:-1])
 
-control_bymonth.to_csv('control_s1_bymonth.csv')
+control_bymonth.to_csv('control_bymonth.csv')
 strat_bymonth.to_csv('strat_bymonth.csv')
-eval_bymonth.to_csv('eval_s1_bymonth.csv')
+eval_bymonth.to_csv('eval_bymonth.csv')
 
 # DEFINE TRAIN/TEST DATA
 # --------------------------------------------------------------------------------------
 print('Defining training data and fitting transformer...')
 if config['train_data'] == 'control':
-    X_train = df_control_s1['Text 2'].values
-    y_train = df_control_s1['Rejected'].values
+    X_train = df_control['Text 2'].values
+    y_train = df_control['Rejected'].values
 elif config['train_data'] == 'strat':
     X_train = df_strat['Text 2'].values
     y_train = df_strat['Rejected'].values
@@ -129,8 +211,8 @@ else:
     print("wrong training data value given. Choose between 'control' and 'strat' in the config file")
     sys.exit()
 
-X_test = df_eval_s1['Text 2'].values
-y_test = df_eval_s1['Rejected'].values
+X_test = df_eval['Text 2'].values
+y_test = df_eval['Rejected'].values
 
 pwd = os.getcwd()
 nltk.data.path.append(os.path.join(pwd,'nltk_data'))
@@ -170,20 +252,38 @@ else:
         metric=autosklearn.metrics.f1
     )
 
+# Compress and save auto-sklearn models
+print('Current directory after automl setup')
+print(os.listdir(os.curdir))
+try:
+    shutil.make_archive('{}_tmp'.format(config['test_name']), 'zip', '{}_tmp'.format(config['test_name']))
+    shutil.make_archive('{}_out'.format(config['test_name']), 'zip', '{}_out'.format(config['test_name']))
+except:
+    print('failed to zip tmp folders')
+    pass
 
 automl.fit(X_train_tf, y_train)
+
+print('Current directory after automl fit')
+print(os.listdir(os.curdir))
+try:
+    shutil.make_archive('{}_tmp'.format(config['test_name']), 'zip', '{}_tmp'.format(config['test_name']))
+    shutil.make_archive('{}_out'.format(config['test_name']), 'zip', '{}_out'.format(config['test_name']))
+except:
+    print('failed to zip tmp folders')
+    pass
 
 print('Auto-sklearn fit done. Predicting test data...')
 y_pred = automl.predict(X_test_tf)
 
-df_eval_s1['True'] = y_test
-df_eval_s1['Pred'] = y_pred
+df_eval['True'] = y_test
+df_eval['Pred'] = y_pred
 
-df_eval_s1.to_csv('results.csv')
+df_eval.to_csv('results.csv')
 
 # SAVE RUN PERFORMANCE
 print('Creating pretty performance files...')
-prf = precision_recall_fscore_support(df_eval_s1['True'], df_eval_s1['Pred'], average="macro")
+prf = precision_recall_fscore_support(df_eval['True'], df_eval['Pred'], average="macro")
 print(prf)
 
 acc = accuracy_score(y_test, y_pred)
@@ -196,7 +296,7 @@ with open("result_stats.txt", "w") as text_file:
     text_file.write('Accuracy: {}\n'.format(acc))
     text_file.write('AUC: {}\n'.format(auc))
 
-months = group_by_month(df_eval_s1)
+months = group_by_month(df_eval)
 f1_m = [precision_recall_fscore_support(df['True'], df['Pred'], average="macro")[2] for df in months]
 precision_m = [precision_recall_fscore_support(df['True'], df['Pred'], average="macro")[0] for df in months]
 recall_m = [precision_recall_fscore_support(df['True'], df['Pred'], average="macro")[1] for df in months]
