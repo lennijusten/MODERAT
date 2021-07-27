@@ -28,8 +28,9 @@ for i in train_chunks:
         'tfidf_min_df': 5,
         'auto-sklearn_time': 43200,
         'auto-sklearn_include_estimators': {'status': False, 'estimators': ['random_forest']},
+        'auto-sklearn_memory_limit': 20*1000,
         'request_cpu': 1,
-        'request_memory': '20GB',
+        'request_memory': '26GB',
         'request_disk': '10GB'
     }
 
