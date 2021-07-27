@@ -102,6 +102,8 @@ df_auc = pd.DataFrame(columns=col_names, index=col_names)
 # Pre-define training chunks and fit classifier
 X_train = chunks[train_index]['Text 2']
 X_train_tf = tf.fit_transform(X_train)
+X_train = None
+
 y_train = chunks[train_index]['Rejected']
 
 print('Fitting auto-sklearn to the entire {} chunk'.format(col))
@@ -111,7 +113,7 @@ if config['auto-sklearn_include_estimators']['status']:
         tmp_folder='auto-sklearn_{}_tmp'.format(col),
         output_folder='auto-sklearn_{}_out'.format(col),
         seed=42,
-        memory_limit=None,
+        memory_limit=config['auto-sklearn_memory_limit'],
         include_estimators=config['auto-sklearn_include_estimators']['estimators'],
         # n_jobs=10,
         metric=autosklearn.metrics.f1
@@ -122,7 +124,7 @@ else:
         tmp_folder='auto-sklearn_{}_tmp'.format(col),
         output_folder='auto-sklearn_{}_out'.format(col),
         seed=42,
-        memory_limit=None,
+        memory_limit=config['auto-sklearn_memory_limit'],
         # n_jobs=10,
         metric=autosklearn.metrics.f1
     )
@@ -141,10 +143,12 @@ for test_index in range(len(chunks)):  # Testing loop
         print("Test chunk =  Train chunk... Fitting new 'self' auto-sklearn classifier to train chunk {}".format(col))
         X_train_self = train_chunks[train_index]['Text 2']
         X_train_tf_self = tf.fit_transform(X_train_self)
+        X_train_self = None
         y_train_self = train_chunks[train_index]['Rejected']
 
         X_test = test_chunks[test_index]['Text 2']
         X_test_tf = tf.fit_transform(X_test)
+        X_test = None
         y_test = test_chunks[test_index]['Rejected']
 
         if config['auto-sklearn_include_estimators']['status']:
@@ -153,7 +157,7 @@ for test_index in range(len(chunks)):  # Testing loop
                 tmp_folder='auto-sklearn_{}self_tmp'.format(col),
                 output_folder='auto-sklearn_{}self_out'.format(col),
                 seed=42,
-                memory_limit=None,
+                memory_limit=config['auto-sklearn_memory_limit'],
                 include_estimators=config['auto-sklearn_include_estimators']['estimators'],
                 # n_jobs=10,
                 metric=autosklearn.metrics.f1
@@ -164,7 +168,7 @@ for test_index in range(len(chunks)):  # Testing loop
                 tmp_folder='auto-sklearn_{}self_tmp'.format(col),
                 output_folder='auto-sklearn_{}self_out'.format(col),
                 seed=42,
-                memory_limit=None,
+                memory_limit=config['auto-sklearn_memory_limit'],
                 # n_jobs=10,
                 metric=autosklearn.metrics.f1
             )
@@ -175,6 +179,45 @@ for test_index in range(len(chunks)):  # Testing loop
 
         test_chunks[train_index]['True'] = y_test
         test_chunks[train_index]['Pred'] = y_pred
+
+        print('Saving self results...')
+        test_chunks[train_index].to_csv('{}_self_test_results.csv'.format(col))
+
+        try:
+            shutil.make_archive('auto-sklearn_{}self_tmp'.format(col), 'zip', 'auto-sklearn_{}self_tmp'.format(col))
+            shutil.make_archive('auto-sklearn_{}self_out'.format(col), 'zip', 'auto-sklearn_{}self_out'.format(col))
+        except:
+            print('failed to zip tmp folders')
+            pass
+
+        with open("{}_Ensemble_self.txt".format(col), "w") as text_file:
+            text_file.write(automl_self.show_models())
+
+        with open("{}_sprint_statistics_self.txt".format(col), "w") as text_file:
+            text_file.write(automl_self.sprint_statistics())
+
+        df_autosk_self = pd.DataFrame(automl_self.cv_results_)
+        df_autosk_self.sort_values(by='rank_test_scores', inplace=True)
+        df_autosk_self.to_csv('{}_cv_results_self.csv'.format(col))
+
+        losses_and_configurations_self = [
+            (run_value.cost, run_key.config_id)
+            for run_key, run_value in automl_self.automl_.runhistory_.data.items()
+        ]
+        losses_and_configurations_self.sort()
+        with open("{}_lowest_loss_config_self.txt".format(col), "w") as text_file:
+            text_file.write("Lowest loss: {}".format(losses_and_configurations_self[0][0]) + '\n')
+            text_file.write("Best configuration: {}".format(
+                automl_self.automl_.runhistory_.ids_config[losses_and_configurations_self[0][1]]))
+            text_file.write("\n tfidf params: {}".format(tf))
+
+        test_chunks = None
+        train_chunks = None
+        automl_self = None
+        df_autosk_self = None
+        X_train_tf_self = None
+        y_train_self = None
+
     else:
         print('Testing on C{}'.format(test_index))
         X_test = chunks[test_index]['Text 2']
@@ -204,7 +247,6 @@ print('Saving results...')
 with open('{}_results.pkl'.format(col), 'wb') as handle:
     pickle.dump(chunks, handle)
 
-test_chunks[train_index].to_csv('{}_self_test_results.csv'.format(col))
 df_precsion.to_csv('precision_{}.csv'.format(col))
 df_recall.to_csv('precision_{}.csv'.format(col))
 df_f1.to_csv('f1_{}.csv'.format(col))
@@ -216,9 +258,6 @@ print(os.listdir(os.curdir))
 try:
     shutil.make_archive('auto-sklearn_{}_tmp'.format(col), 'zip', 'auto-sklearn_{}_tmp'.format(col))
     shutil.make_archive('auto-sklearn_{}_out'.format(col), 'zip', 'auto-sklearn_{}_out'.format(col))
-
-    shutil.make_archive('auto-sklearn_{}self_tmp'.format(col), 'zip', 'auto-sklearn_{}self_tmp'.format(col))
-    shutil.make_archive('auto-sklearn_{}self_out'.format(col), 'zip', 'auto-sklearn_{}self_out'.format(col))
 except:
     print('failed to zip tmp folders')
     pass
@@ -228,22 +267,12 @@ except:
 with open("{}_Ensemble.txt".format(col), "w") as text_file:
     text_file.write(automl.show_models())
 
-with open("{}_Ensemble_self.txt".format(col), "w") as text_file:
-    text_file.write(automl_self.show_models())
-
 with open("{}_sprint_statistics.txt".format(col), "w") as text_file:
     text_file.write(automl.sprint_statistics())
-
-with open("{}_sprint_statistics_self.txt".format(col), "w") as text_file:
-    text_file.write(automl_self.sprint_statistics())
 
 df_autosk = pd.DataFrame(automl.cv_results_)
 df_autosk.sort_values(by='rank_test_scores', inplace=True)
 df_autosk.to_csv('{}_cv_results.csv'.format(col))
-
-df_autosk_self = pd.DataFrame(automl_self.cv_results_)
-df_autosk_self.sort_values(by='rank_test_scores', inplace=True)
-df_autosk_self.to_csv('{}_cv_results_self.csv'.format(col))
 
 losses_and_configurations = [
     (run_value.cost, run_key.config_id)
@@ -255,14 +284,5 @@ with open("{}_lowest_loss_config.txt".format(col), "w") as text_file:
     text_file.write("Best configuration: {}".format(automl.automl_.runhistory_.ids_config[losses_and_configurations[0][1]]))
     text_file.write("\n tfidf params: {}".format(tf))
 
-losses_and_configurations_self = [
-    (run_value.cost, run_key.config_id)
-    for run_key, run_value in automl_self.automl_.runhistory_.data.items()
-]
-losses_and_configurations_self.sort()
-with open("{}_lowest_loss_config_self.txt".format(col), "w") as text_file:
-    text_file.write("Lowest loss: {}".format(losses_and_configurations_self[0][0]) + '\n')
-    text_file.write("Best configuration: {}".format(automl_self.automl_.runhistory_.ids_config[losses_and_configurations_self[0][1]]))
-    text_file.write("\n tfidf params: {}".format(tf))
 
 
