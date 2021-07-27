@@ -204,9 +204,13 @@ print('Defining training data and fitting transformer...')
 if config['train_data'] == 'control':
     X_train = df_control['Text 2'].values
     y_train = df_control['Rejected'].values
+    df_strat = None
+    df_control = None
 elif config['train_data'] == 'strat':
     X_train = df_strat['Text 2'].values
     y_train = df_strat['Rejected'].values
+    df_control = None
+    df_strat = None
 else:
     print("wrong training data value given. Choose between 'control' and 'strat' in the config file")
     sys.exit()
@@ -226,6 +230,9 @@ tf = TfidfVectorizer(stop_words=german_stop_words, max_features=config['tfidf_ma
 X_train_tf = tf.fit_transform(X_train)
 X_test_tf = tf.fit_transform(X_test)
 
+X_test = None
+X_train = None
+
 # FIT AUTO-SKLEARN
 # --------------------------------------------------------------------------------------
 
@@ -236,7 +243,7 @@ if config['auto-sklearn_include_estimators']['status']:
         tmp_folder='{}_tmp'.format(config['test_name']),
         output_folder='{}_out'.format(config['test_name']),
         seed=42,
-        memory_limit=None,
+        memory_limit=config['auto-sklearn_memory_limit'],
         include_estimators=config['auto-sklearn_include_estimators']['estimators'],
         # n_jobs=8,
         metric=autosklearn.metrics.f1
@@ -247,7 +254,7 @@ else:
         tmp_folder='{}_tmp'.format(config['test_name']),
         output_folder='{}_out'.format(config['test_name']),
         seed=42,
-        memory_limit=None,
+        memory_limit=config['auto-sklearn_memory_limit'],
         # n_jobs=8,
         metric=autosklearn.metrics.f1
     )
@@ -264,24 +271,52 @@ except:
 
 automl.fit(X_train_tf, y_train)
 
-print('Current directory after automl fit')
-print(os.listdir(os.curdir))
-try:
-    shutil.make_archive('{}_tmp'.format(config['test_name']), 'zip', '{}_tmp'.format(config['test_name']))
-    shutil.make_archive('{}_out'.format(config['test_name']), 'zip', '{}_out'.format(config['test_name']))
-except:
-    print('failed to zip tmp folders')
-    pass
+# SAVE RUN RESULTS
+# --------------------------------------------------------------------------------------
+with open("Ensemble.txt", "w") as text_file:
+    text_file.write(automl.show_models())
+
+with open("sprint_statistics.txt", "w") as text_file:
+    text_file.write(automl.sprint_statistics())
+
+df_autosk = pd.DataFrame(automl.cv_results_)
+df_autosk.sort_values(by='rank_test_scores', inplace=True)
+df_autosk.to_csv('cv_results.csv')
+
+losses_and_configurations = [
+    (run_value.cost, run_key.config_id)
+    for run_key, run_value in automl.automl_.runhistory_.data.items()
+]
+losses_and_configurations.sort()
+with open("lowest_loss_config.txt", "w") as text_file:
+    text_file.write("Lowest loss: {}".format(losses_and_configurations[0][0]) + '\n')
+    text_file.write("Best configuration: {}".format(automl.automl_.runhistory_.ids_config[losses_and_configurations[0][1]]))
+    text_file.write("\n tfidf params: {}".format(tf))
+
+# SAVE RUN PERFORMANCE
+# --------------------------------------------------------------------------------------
+fig, ax = plt.subplots()
+plot_roc_curve(automl, X_test_tf, y_test, ax=ax)
+ax.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',label='Chance', alpha=.8)
+plt.savefig('ROC_curve.png')
+
+fig, ax = plt.subplots()
+plot_precision_recall_curve(automl, X_test_tf, y_test,ax=ax)
+plt.savefig('Precision-Recall_curve.png')
+
+fig, ax = plt.subplots()
+plot_confusion_matrix(automl, X_test_tf, y_test)
+plt.savefig('confusion-matrix.png')
 
 print('Auto-sklearn fit done. Predicting test data...')
 y_pred = automl.predict(X_test_tf)
+automl = None
 
 df_eval['True'] = y_test
 df_eval['Pred'] = y_pred
 
 df_eval.to_csv('results.csv')
 
-# SAVE RUN PERFORMANCE
 print('Creating pretty performance files...')
 prf = precision_recall_fscore_support(df_eval['True'], df_eval['Pred'], average="macro")
 print(prf)
@@ -306,19 +341,6 @@ auc_m = [roc_auc_score(df['True'], df['Pred']) for df in months]
 df_monthly_perf = pd.DataFrame({'F1':f1_m,'Precision':precision_m,'Recall':recall_m,'Accuracy':acc_m,'AUC':auc_m},index=m_eval[:-1])
 df_monthly_perf.to_csv('monthly_results.csv')
 
-fig, ax = plt.subplots()
-plot_roc_curve(automl, X_test_tf, y_test, ax=ax)
-ax.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',label='Chance', alpha=.8)
-plt.savefig('ROC_curve.png')
-
-fig, ax = plt.subplots()
-plot_precision_recall_curve(automl, X_test_tf, y_test,ax=ax)
-plt.savefig('Precision-Recall_curve.png')
-
-fig, ax = plt.subplots()
-plot_confusion_matrix(automl, X_test_tf, y_test)
-plt.savefig('confusion-matrix.png')
-
 
 def plot_monthly_perf(y, metric='F1-score'):
     x = np.arange(0, len(y), 1)
@@ -335,24 +357,3 @@ def plot_monthly_perf(y, metric='F1-score'):
     return fig
 
 
-# SAVE RUN RESULTS
-# --------------------------------------------------------------------------------------
-with open("Ensemble.txt", "w") as text_file:
-    text_file.write(automl.show_models())
-
-with open("sprint_statistics.txt", "w") as text_file:
-    text_file.write(automl.sprint_statistics())
-
-df_autosk = pd.DataFrame(automl.cv_results_)
-df_autosk.sort_values(by='rank_test_scores', inplace=True)
-df_autosk.to_csv('cv_results.csv')
-
-losses_and_configurations = [
-    (run_value.cost, run_key.config_id)
-    for run_key, run_value in automl.automl_.runhistory_.data.items()
-]
-losses_and_configurations.sort()
-with open("lowest_loss_config.txt", "w") as text_file:
-    text_file.write("Lowest loss: {}".format(losses_and_configurations[0][0]) + '\n')
-    text_file.write("Best configuration: {}".format(automl.automl_.runhistory_.ids_config[losses_and_configurations[0][1]]))
-    text_file.write("\n tfidf params: {}".format(tf))
