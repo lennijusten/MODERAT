@@ -110,8 +110,8 @@ print('Fitting auto-sklearn to the entire {} chunk'.format(col))
 if config['auto-sklearn_include_estimators']['status']:
     automl = AutoSklearnClassifier(
         time_left_for_this_task=43200,
-        tmp_folder='auto-sklearn_{}_tmp'.format(col),
-        output_folder='auto-sklearn_{}_out'.format(col),
+        tmp_folder='{}_auto-sklearn_tmp'.format(col),
+        output_folder='{}_auto-sklearn_out'.format(col),
         seed=42,
         memory_limit=config['auto-sklearn_memory_limit'],
         include_estimators=config['auto-sklearn_include_estimators']['estimators'],
@@ -121,8 +121,8 @@ if config['auto-sklearn_include_estimators']['status']:
 else:
     automl = AutoSklearnClassifier(
         time_left_for_this_task=43200,
-        tmp_folder='auto-sklearn_{}_tmp'.format(col),
-        output_folder='auto-sklearn_{}_out'.format(col),
+        tmp_folder='{}_auto-sklearn_tmp'.format(col),
+        output_folder='{}_auto-sklearn_out'.format(col),
         seed=42,
         memory_limit=config['auto-sklearn_memory_limit'],
         # n_jobs=10,
@@ -154,8 +154,8 @@ for test_index in range(len(chunks)):  # Testing loop
         if config['auto-sklearn_include_estimators']['status']:
             automl_self = AutoSklearnClassifier(
                 time_left_for_this_task=43200,
-                tmp_folder='auto-sklearn_{}self_tmp'.format(col),
-                output_folder='auto-sklearn_{}self_out'.format(col),
+                tmp_folder='{}_auto-sklearn_self_tmp'.format(col),
+                output_folder='{}_auto-sklearn_self_out'.format(col),
                 seed=42,
                 memory_limit=config['auto-sklearn_memory_limit'],
                 include_estimators=config['auto-sklearn_include_estimators']['estimators'],
@@ -165,8 +165,8 @@ for test_index in range(len(chunks)):  # Testing loop
         else:
             automl_self = AutoSklearnClassifier(
                 time_left_for_this_task=43200,
-                tmp_folder='auto-sklearn_{}self_tmp'.format(col),
-                output_folder='auto-sklearn_{}self_out'.format(col),
+                tmp_folder='{}_auto-sklearn_self_tmp'.format(col),
+                output_folder='{}_auto-sklearn_self_out'.format(col),
                 seed=42,
                 memory_limit=config['auto-sklearn_memory_limit'],
                 # n_jobs=10,
@@ -184,8 +184,8 @@ for test_index in range(len(chunks)):  # Testing loop
         test_chunks[train_index].to_csv('{}_self_test_results.csv'.format(col))
 
         try:
-            shutil.make_archive('auto-sklearn_{}self_tmp'.format(col), 'zip', 'auto-sklearn_{}self_tmp'.format(col))
-            shutil.make_archive('auto-sklearn_{}self_out'.format(col), 'zip', 'auto-sklearn_{}self_out'.format(col))
+            shutil.make_archive('{}_auto-sklearn_self_tmp'.format(col), 'zip', '{}_auto-sklearn_self_tmp'.format(col))
+            shutil.make_archive('{}_auto-sklearn_self_out'.format(col), 'zip', '{}_auto-sklearn_self_out'.format(col))
         except:
             print('failed to zip tmp folders')
             pass
@@ -247,17 +247,17 @@ print('Saving results...')
 with open('{}_results.pkl'.format(col), 'wb') as handle:
     pickle.dump(chunks, handle)
 
-df_precsion.to_csv('precision_{}.csv'.format(col))
-df_recall.to_csv('precision_{}.csv'.format(col))
-df_f1.to_csv('f1_{}.csv'.format(col))
-df_acc.to_csv('acc_{}.csv'.format(col))
-df_auc.to_csv('auc_{}.csv'.format(col))
+df_precsion.to_csv('{}_precision.csv'.format(col))
+df_recall.to_csv('{}_precision.csv'.format(col))
+df_f1.to_csv('{}_f1.csv'.format(col))
+df_acc.to_csv('{}_acc.csv'.format(col))
+df_auc.to_csv('{}_.csv'.format(col))
 
 print('Current directory after automl fit')
 print(os.listdir(os.curdir))
 try:
-    shutil.make_archive('auto-sklearn_{}_tmp'.format(col), 'zip', 'auto-sklearn_{}_tmp'.format(col))
-    shutil.make_archive('auto-sklearn_{}_out'.format(col), 'zip', 'auto-sklearn_{}_out'.format(col))
+    shutil.make_archive('{}_auto-sklearn_tmp'.format(col), 'zip', '{}_auto-sklearn_tmp'.format(col))
+    shutil.make_archive('{}_auto-sklearn_out'.format(col), 'zip', '{}_auto-sklearn_out'.format(col))
 except:
     print('failed to zip tmp folders')
     pass
