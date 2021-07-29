@@ -147,7 +147,7 @@ for test_index in range(len(chunks)):  # Testing loop
         y_train_self = train_chunks[train_index]['Rejected']
 
         X_test = test_chunks[test_index]['Text 2']
-        X_test_tf = tf.fit_transform(X_test)
+        X_test_tf = tf.transform(X_test)
         X_test = None
         y_test = test_chunks[test_index]['Rejected']
 
@@ -221,7 +221,7 @@ for test_index in range(len(chunks)):  # Testing loop
     else:
         print('Testing on C{}'.format(test_index))
         X_test = chunks[test_index]['Text 2']
-        X_test_tf = tf.fit_transform(X_test)
+        X_test_tf = tf.transform(X_test)
         y_test = chunks[test_index]['Rejected']
 
         y_pred = automl.predict(X_test_tf)
