@@ -228,7 +228,7 @@ tf = TfidfVectorizer(stop_words=german_stop_words, max_features=config['tfidf_ma
                      ngram_range=config['tfidf_ngram_range'], min_df=config['tfidf_min_df'])
 
 X_train_tf = tf.fit_transform(X_train)
-X_test_tf = tf.fit_transform(X_test)
+X_test_tf = tf.transform(X_test)
 
 X_test = None
 X_train = None
