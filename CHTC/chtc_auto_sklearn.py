@@ -259,6 +259,9 @@ else:
         metric=autosklearn.metrics.f1
     )
 
+
+automl.fit(X_train_tf, y_train)
+
 # Compress and save auto-sklearn models
 print('Current directory after automl setup')
 print(os.listdir(os.curdir))
@@ -268,8 +271,6 @@ try:
 except:
     print('failed to zip tmp folders')
     pass
-
-automl.fit(X_train_tf, y_train)
 
 # SAVE RUN RESULTS
 # --------------------------------------------------------------------------------------
