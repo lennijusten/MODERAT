@@ -251,7 +251,7 @@ df_precsion.to_csv('{}_precision.csv'.format(col))
 df_recall.to_csv('{}_precision.csv'.format(col))
 df_f1.to_csv('{}_f1.csv'.format(col))
 df_acc.to_csv('{}_acc.csv'.format(col))
-df_auc.to_csv('{}_.csv'.format(col))
+df_auc.to_csv('{}_auc.csv'.format(col))
 
 print('Current directory after automl fit')
 print(os.listdir(os.curdir))
