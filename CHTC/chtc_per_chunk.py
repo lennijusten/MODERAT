@@ -62,7 +62,6 @@ def RCR(df):
 
 # PRE-TRAINING STATISTICS
 # --------------------------------------------------------------------------------------
-# todo
 c_date = []
 c_ncomments = []
 c_nrejected = []
@@ -190,6 +189,12 @@ for test_index in range(len(chunks)):  # Testing loop
             print('failed to zip tmp folders')
             pass
 
+        try:
+            with open('model-self-{}'.format(col), 'wb') as f:
+                pickle.dump(automl_self, f)
+        except:
+            pass
+
         with open("{}_Ensemble_self.txt".format(col), "w") as text_file:
             text_file.write(automl_self.show_models())
 
@@ -260,6 +265,12 @@ try:
     shutil.make_archive('{}_auto-sklearn_out'.format(col), 'zip', '{}_auto-sklearn_out'.format(col))
 except:
     print('failed to zip tmp folders')
+    pass
+
+try:
+    with open('model-{}'.format(col), 'wb') as f:
+        pickle.dump(automl, f)
+except:
     pass
 
 # SAVE RUN RESULTS
