@@ -8,7 +8,7 @@ from functions import *
 # compare two runs
 run = '/Users/lenni/PycharmProjects/MODERAT_github/CHTC/months4-lazy50'
 
-save_path = '/Users/lenni/PycharmProjects/MODERAT_github/Figures'
+save_path = '/Figures'
 
 chunks_labels = ['11/2018-02/2019', '03/2019-06/2019', '07/2019-10/2019', '11/2019-02/2020', '03/2020-06/2020']
 

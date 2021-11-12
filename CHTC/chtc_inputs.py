@@ -4,22 +4,22 @@ import shutil
 
 # Set run configuration
 config = {
-    'test_name': 'strat-lazy-tfidf',
+    'test_name': 'strat50-lazy-tfidf',
     'script_name': 'chtc_auto_sklearn.py',
     'docker_image': 'ljusten/auto-sklearn-lite:latest',
     'train_data': 'strat', # choose from control and strat
-    'eval_path': '/home/ljusten/Moderat/Auto-sklearn/Control-Strat/Data/df_eval_s1-lazy.pkl',
-    'control_path': '/home/ljusten/Moderat/Auto-sklearn/Control-Strat/Data/df_control_s1-lazy.pkl',
-    'strat_path': '/home/ljusten/Moderat/Auto-sklearn/Control-Strat/Data/df_strat-lazy.pkl',
-    'tfidf_max_features': 5000,
+    'eval_path': '/home/ljusten/Moderat/Auto-sklearn/Control-Strat/Data/df50_eval_s1.pkl',
+    'control_path': '/home/ljusten/Moderat/Auto-sklearn/Control-Strat/Data/df50_control_s1.pkl',
+    'strat_path': '/home/ljusten/Moderat/Auto-sklearn/Control-Strat/Data/df50_strat.pkl',
+    'tfidf_max_features': 3000,
     'tfidf_ngram_range': (1, 2),
     'tfidf_min_df': 5,
     'auto-sklearn_time': 86400,
     'auto-sklearn_include_estimators': {'status': False, 'estimators': ['random_forest']},
     'auto-sklearn_memory_limit': 20*1000,
     'request_cpu': 1,
-    'request_memory': '35GB',
-    'request_disk': '10GB'
+    'request_memory': '20GB',
+    'request_disk': '20GB '
 }
 
 dirpath = config['test_name']

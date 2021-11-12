@@ -3,8 +3,8 @@ import json
 import shutil
 import numpy as np
 
-test_name = 'chunking1'
-train_chunks = np.arange(0,10,1)
+test_name = 'months4-lazy'
+train_chunks = np.arange(0,5,1)
 # Set run configuration
 
 dirpath = test_name
@@ -20,10 +20,10 @@ for i in train_chunks:
         'script_name': 'chtc_per_chunk.py',
         'docker_image': 'ljusten/auto-sklearn-lite:latest',
         'train_index': int(i),
-        'chunks_path': '/home/ljusten/Moderat/Auto-sklearn/Chunking/Data/chunks.pkl',
-        'train_chunks_path': '/home/ljusten/Moderat/Auto-sklearn/Chunking/Data/train_chunks.pkl',
-        'test_chunks_path': '/home/ljusten/Moderat/Auto-sklearn/Chunking/Data/test_chunks.pkl',
-        'tfidf_max_features': 5000,
+        'chunks_path': '/home/ljusten/Moderat/Auto-sklearn/Chunking/Data/4month_chunks.pkl',
+        'train_chunks_path': '/home/ljusten/Moderat/Auto-sklearn/Chunking/Data/4month_train_chunks.pkl',
+        'test_chunks_path': '/home/ljusten/Moderat/Auto-sklearn/Chunking/Data/4month_test_chunks.pkl',
+        'tfidf_max_features': 3000,
         'tfidf_ngram_range': (1, 2),
         'tfidf_min_df': 5,
         'auto-sklearn_time': 43200,
@@ -31,7 +31,7 @@ for i in train_chunks:
         'auto-sklearn_memory_limit': 20*1000,
         'request_cpu': 1,
         'request_memory': '26GB',
-        'request_disk': '10GB'
+        'request_disk': '26GB'
     }
 
     # Write configuration JSON

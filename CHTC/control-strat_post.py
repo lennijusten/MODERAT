@@ -4,8 +4,10 @@ import matplotlib.pyplot as plt
 import os
 
 # compare two runs
-run1 = '/Users/lenni/PycharmProjects/MODERAT_github/CHTC/lazy-tfidf/control-lazy-tfidf'
-run2 = '/Users/lenni/PycharmProjects/MODERAT_github/CHTC/lazy-tfidf/strat-lazy-tfidf'
+run1 = '/Users/lenni/PycharmProjects/MODERAT_github/CHTC/df50-lazy-tfidf/control50-lazy-tfidf'
+run2 = '/Users/lenni/PycharmProjects/MODERAT_github/CHTC/df50-lazy-tfidf/strat50-lazy-tfidf'
+
+save_path = '/Users/lenni/PycharmProjects/MODERAT_github/CHTC/df50-lazy-tfidf'
 
 name1 = os.path.basename(run1)
 name2 = os.path.basename(run2)
@@ -21,16 +23,21 @@ def compare_monthly_prf(run1, run2, score='F1', save_path=None):
     combined['key_0'] = pd.to_datetime(combined['key_0'])
     combined.set_index('key_0', inplace=True)
 
-    plt.plot(combined.index, combined['{}_x'.format(score)], label=name1)
-    plt.plot(combined.index, combined['{}_y'.format(score)], label=name2)
-    plt.xlabel('Eval month')
+    # plt.plot(combined.index, combined['{}_x'.format(score)], label=name1)
+    # plt.plot(combined.index, combined['{}_y'.format(score)], label=name2)
+    plt.plot(combined.index, combined['{}_x'.format(score)], label='Control')
+    plt.plot(combined.index, combined['{}_y'.format(score)], label='Time-stratified')
+    plt.xlabel('Evaluation dataset month')
     plt.ylabel('{}-score'.format(score))
     plt.title('{}-score comparison'.format(score))
-    plt.xticks(rotation=30)
-    plt.legend()
+
+    labels = ['11/2019', '12/2019','01/2020','02/2020','03/2020','04/2020','05/2020','06/2020']
+
+    plt.xticks(combined.index,labels,rotation=30)
+    plt.legend(title='Training dataset')
 
     if save_path is not None:
-        plt.savefig(os.path.join(save_path, '{}-comparison.png'.format(score)))
+        plt.savefig(os.path.join(save_path, '{}-comparison.png'.format(score)),dpi=300)
 
     plt.show()
 
@@ -38,7 +45,7 @@ def compare_monthly_prf(run1, run2, score='F1', save_path=None):
 
 
 combined = compare_monthly_prf(run1, run2, score='F1',
-                               save_path='/Users/lenni/PycharmProjects/MODERAT_github/CHTC/lazy-tfidf')
+                               save_path='/Users/lenni/PycharmProjects/MODERAT_github/Figures')
 
 
 def comparison_stats(run1, run2, save_path=None):
@@ -84,6 +91,5 @@ def comparison_stats(run1, run2, save_path=None):
     return diff
 
 
-diff = comparison_stats(run1, run2, save_path='/Users/lenni/PycharmProjects/MODERAT_github/CHTC/lazy-tfidf')
+diff = comparison_stats(run1, run2, save_path=save_path)
 
-# TODO: Load AutoML models and plot overlapping precision-recall and AUC-ROC curves

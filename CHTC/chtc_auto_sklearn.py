@@ -272,8 +272,11 @@ except:
     print('failed to zip tmp folders')
     pass
 
-with open('model-{}'.format(config['test_name']), 'wb') as f:
-    pickle.dump(automl, f)
+try:
+    with open('model-{}'.format(config['test_name']), 'wb') as f:
+        pickle.dump(automl, f)
+except:
+    pass
 
 # SAVE RUN RESULTS
 # --------------------------------------------------------------------------------------
