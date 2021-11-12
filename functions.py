@@ -5,16 +5,16 @@ import numpy as np
 
 def get_date_range(df, include_end=True):
     if include_end:
-        return pd.date_range(start=df['date'].min().replace(day=1).date(),
-                           end=df['date'].max().replace(day=1).date() + relativedelta(months=1),
+        return pd.date_range(start=df['Date'].min().replace(day=1).date(),
+                           end=df['Date'].max().replace(day=1).date() + relativedelta(months=1),
                            freq='MS')
     else:
-        return pd.date_range(start=df['date'].min().replace(day=1).date(),
-                           end=df['date'].max().replace(day=1).date() + relativedelta(months=1),
+        return pd.date_range(start=df['Date'].min().replace(day=1).date(),
+                           end=df['Date'].max().replace(day=1).date() + relativedelta(months=1),
                            freq='MS')[0:-1]
 
 def group_by_month(df):
-    g = df.groupby(pd.Grouper(key='date', freq='M'))
+    g = df.groupby(pd.Grouper(key='Date', freq='M'))
 
     # groups to a list of dataframes with list comprehension
     return [group for _, group in g]
@@ -31,7 +31,7 @@ def first_months(df, n, group=False):
     months = date_range[0:n + 1]
 
     # greater than the start date and smaller than the end date
-    mask = (df['date'] >= months[0]) & (df['date'] < months[-1])
+    mask = (df['Date'] >= months[0]) & (df['Date'] < months[-1])
     df2 = df.loc[mask]
 
     if group:
@@ -52,7 +52,7 @@ def last_months(df, n, group=False):  # group=True returns a list of DataFrames 
     months = date_range[-n - 1:]
 
     # greater than the start date and smaller than the end date
-    mask = (df['date'] >= months[0]) & (df['date'] < months[-1])
+    mask = (df['Date'] >= months[0]) & (df['Date'] < months[-1])
     df2 = df.loc[mask]
 
     if group:
@@ -74,14 +74,14 @@ def time_interval(df, start, end, include_end=True, group=False):
         else:
             months = date_range[start - 1:end]
 
-        mask = (df['date'] >= months[0]) & (df['date'] < months[-1])
+        mask = (df['Date'] >= months[0]) & (df['Date'] < months[-1])
 
     elif (isinstance(start, datetime.date) and isinstance(end, datetime.date)) or (
             isinstance(start, datetime.datetime) and isinstance(end, datetime.datetime)):
         if include_end:
-            mask = (df['date'] >= pd.to_datetime(start)) & (df['date'] <= pd.to_datetime(end))
+            mask = (df['Date'] >= pd.to_datetime(start)) & (df['Date'] <= pd.to_datetime(end))
         else:
-            mask = (df['date'] >= pd.to_datetime(start)) & (df['date'] < pd.to_datetime(end))
+            mask = (df['Date'] >= pd.to_datetime(start)) & (df['Date'] < pd.to_datetime(end))
 
     else:
         print("'star' or 'end' are invalid object types")
